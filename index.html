@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>RAVE Babylon -- by ProfessorF (professorf@gmail.com)</title>
+    <script src="babylon.js"></script> 
+    <script src="hand.js"></script>
+    <script>
+        var canvas, engine, scene, light0, origin, camera,
+            dudemesh, targetx, targetz, rot;
+    function start() {
+        canvas = document.getElementById("cvRAVE");
+        engine = new BABYLON.Engine(canvas, true);
+        scene = new BABYLON.Scene(engine);
+
+        camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 50, -200), scene);
+        light0 = new BABYLON.DirectionalLight("omni", new BABYLON.Vector3(1, 1, 0), scene);
+        origin = BABYLON.Mesh.CreateSphere("origin", 10, 2.0, scene);
+        ground = BABYLON.Mesh.CreateGround("ground", 10000, 1000, 1, scene);
+        targetx = 0; targetz = 0; rot = 0;
+        BABYLON.SceneLoader.ImportMesh("him", "Dude/", "dude.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+            dudemesh=newMeshes;
+            newMeshes[0].position = new BABYLON.Vector3(0, 0, 0);  // The original dude
+            scene.beginAnimation(skeletons[0], 0, 120, 1.0, true);
+        });
+       
+        scene.activeCamera.attachControl(canvas);
+        engine.runRenderLoop(function () {
+            if (dudemesh) {
+                dx = targetx - dudemesh[0].position.x;
+                dz = targetz - dudemesh[0].position.z;
+                rot = Math.atan2(dx, dz); // or dz,dx, but modify rotation
+                len = Math.sqrt(dx * dx + dz * dz);
+                if (len == 0) len = 1;
+                dx /= len;
+                dz /= len;
+                dudemesh[0].rotation.y = rot+Math.PI; 
+                dudemesh[0].position.x += dx;
+                dudemesh[0].position.z += dz;
+            }
+            scene.render();
+        });
+    }
+
+    function moveDude(event) {
+        var pickResult = scene.pick(event.clientX, event.clientY);
+        targetx = pickResult.pickedPoint.x;
+        targetz = pickResult.pickedPoint.z;
+    }
+    </script>
+    <style>
+        html, body { From tutorial width:100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        #cvRAVE {
+            width:100%;height:100%;
+        }
+    </style>
+</head>
+<body onload="start()">
+    <canvas onclick="moveDude(event)" id="cvRAVE" ></canvas>
+</body>
+</html>
